@@ -11,7 +11,7 @@ var m=[];
 
 var paused=true;
 var rightedge;
-var mode=0;
+var mode=1;
 var wavelength,amplitude;
 
 var animate;
@@ -25,23 +25,27 @@ var t=0;
 function init(){
 	can=document.getElementById("can0");
 	ctx=can.getContext("2d");
+	can1=document.getElementById("can1");
+	ctx1=can1.getContext("2d");
 	updatemodes();
 	updateedge();
 	reset();
+	setmass(1,0,600);
 	draw();
 }
 function reset(){
 t=0;
+y=[];
+v=[];
+m=[];
 numseg=parseInt(document.getElementById("input0").value);
 for(var i=0;i<numseg;i++){
 y[i]=0;
 v[i]=0;
-m[i]=1;
 ynew[i]=0;
 }
-
+setmass(1,0,600);
 }
-
 function update(i){
 if(isNaN(y[i+1])){
 	
@@ -55,7 +59,7 @@ if(isNaN(y[i+1])){
 		v[i]=0
 	}
 }else{
-	a[i]=(y[i-1]+y[i+1]-2*y[i])/(m[i]);
+	a[i]=(y[i-1]+y[i+1]-2*y[i])/((m[i]));
 }
 v[i]+=a[i];
 ynew[i]+=v[i];
@@ -73,16 +77,18 @@ function pulse(){
 t=0;
 }
 function draw(){
-	if(mode===0){
+	if(mode===1){
 		if(t<50){
 			y[0]=amplitude*Math.exp(-(t/10-2)*(t/10-2))
 			t++;
 		}else{
 			y[0]=0;
 		}
-	}else{
+	}else if(mode===2){
 	y[0]=amplitude*Math.sin((2*Math.PI)*t/wavelength);
 	t++;
+	}else if(mode===3){
+		y[0]=0;
 	}
 		ctx.clearRect(0,0,600,200);
 		updateall();
@@ -92,6 +98,10 @@ function draw(){
 		}
 	ctx.stroke();
 	ctx.closePath();
+	if(!paused){
+	clearTimeout(animate);
+	animate=setTimeout(draw,1000/fps);
+	}
 }
 function updateedge(){
 if(document.getElementById("edge1").checked){
@@ -103,19 +113,57 @@ rightedge=2;
 }
 }
 function updatemodes(){
-wavelength=parseFloat(document.getElementById("input2").value);
+wavelength=parseFloat(document.getElementById("wav2").value);
 
 t=0;
 if(document.getElementById("mode1").checked){
-mode=0;//gauss
-amplitude=parseFloat(document.getElementById("input1").value);
+mode=1;//gauss
+amplitude=parseFloat(document.getElementById("amp1").value);
 document.getElementById("option1").style.visibility="visible";
 document.getElementById("option2").style.visibility="hidden";
-}else{
-mode=1;//sine
-amplitude=parseFloat(document.getElementById("input3").value);
+document.getElementById("option3").style.visibility="hidden";
+}else if(document.getElementById("mode2").checked){
+mode=2;//sine
+amplitude=parseFloat(document.getElementById("amp2").value);
 document.getElementById("option2").style.visibility="visible";
 document.getElementById("option1").style.visibility="hidden";
+document.getElementById("option3").style.visibility="hidden";
+}else if(document.getElementById("mode3").checked){
+mode=3;//fixed
+document.getElementById("option3").style.visibility="visible";
+document.getElementById("option1").style.visibility="hidden";
+document.getElementById("option2").style.visibility="hidden";
+}
+}
+function pause(){
+clearTimeout(animate);
+paused=true;
+}
+function setmass(mass,start,end){
+	ctx1.strokeStyle="rgba(100,100,200,0.5)";
+	ctx1.clearRect(0,0,600,200);
+	for(var i=start;i<numseg&&i<end;i++){
+		m[i]=mass;
+	}
+	document.getElementById("base").innerHTML="<span class=\"marker\">Mass:"+m[0]+"</span>";
+	for(var i=1;i<numseg;i++){
+
+		if(m[i-1]!==m[i]){
+			document.getElementById("base").innerHTML+="<span class=\"marker\" style=\"left:"+(i+20)+"px\">"+m[i]+"</span>";
+			ctx1.beginPath();
+			ctx1.moveTo(i,0);
+			ctx1.lineTo(i,200);
+			ctx1.stroke();
+			ctx.closePath();
+		}
+	}
+}
+function massclick(){
+var st=parseInt(document.getElementById("mass1").value);
+var en=parseInt(document.getElementById("mass2").value);
+var ma=parseInt(document.getElementById("mass3").value);
+if(st<=en&&ma>=1){
+setmass(ma,st,en);
 }
 }
 </script>
@@ -123,6 +171,7 @@ document.getElementById("option1").style.visibility="hidden";
 body{
 color:#fff;
 font-family:helvetica,sans-serif;
+font-size:18px;
 }
 #can0{
 position:absolute;
@@ -140,65 +189,90 @@ text-align:center;
 .mainbutton:active{
 background-color:#99f;
 }
-table{
+#controls{
 position:relative;
-
 bottom:1em;
 }
-#left{
-width:300px;
-height:300px;
-}
-#right{
-position:relative;
-width:300px;
-left:300px;
-bottom:300px;
-text-align:right;
+td{
+background-color:#216;
+padding:10px;
+vertical-align:top;
+height:200px;
+border-radius:8px;
 }
 #can1{
 position:relative;
 z-index:1;
 }
-#option1,#option2{
+#option1,#option2,#option3{
 position:relative;
 left:1em;
 color:#bbb;
 }
-#input0,#input1,#input2,#input3{
+input[type="text"]{
 width:5em;
+}
+.marker{
+position:absolute;
+font-size:10px;
+}
+#maintable{
+width:600px;
+}
+.right{
+text-align:right;
+position:relative;
 }
 </style>
 </head>
-<body bgcolor="#205" onload="init()">
-String Length:<input type="number" id="input0" value="400"><br>
+<body bgcolor="#0a0033" onload="init()">
+String Length:<input type="text" id="input0" value="400"><br>
 <canvas height="200" width="600" id="can0"></canvas>
 <canvas height="200" width="600" id="can1"></canvas><br>
+<div id="base">
 
-<div id="left">
+</div><br>
+<table id="maintable"><tr>
+<td id="left">
 <div id="modes" onchange="updatemodes()">
 Left driver:<br>
-<input id="mode1" type="radio" name="mode" checked> Gaussian Pulse<br>
+<input id="mode1" type="radio" name="mode" checked>Gaussian Pulse<br>
 	<div id="option1">
-	Amplitude: <input id="input1" value="20"><br>
+	Amplitude: <input type="text" id="amp1" value="20"><br>
 	<button  onclick="t=0">Send another pulse</button><br></div>
-<input id="mode2" type="radio" name="mode"> Sinusoidal<br>
+<input id="mode2" type="radio" name="mode">Sinusoidal<br>
 	<div id="option2">
-	Wavelength: <input id="input2" value="100"><br>
-	Amplitude: <input id="input3" value="20">
+	Wavelength: <input type="text" id="wav2" value="100"><br>
+	Amplitude: <input type="text" id="amp2" value="20">
 	</div>
-</div>
-<table><tr>
-<td class="mainbutton" onclick="clearInterval(animate);animate=setInterval(draw,(1000/fps))">&#9658;<br>Play</td>
-<td class="mainbutton" onclick="clearInterval(animate)"><b>&#10073;&#10073;</b><br>Pause</td>
-<td class="mainbutton" onclick="clearInterval(animate);reset();draw()">&#x27f2;<br>Reset</td><br>
-</tr></table>
-</div>
-<div id="right" onchange="updateedge()">
+<input id="mode3" type="radio" name="mode">Fixed<br>
+	<div id="option3">
+
+	</div>
+</td>
+<td onchange="updateedge()" class="right">
+<div>
 Right edge:<br>
-<input id="edge1" type="radio" name="edge" checked> Solid<br>
-<input id="edge2" type="radio" name="edge"> Loose<br>
-<input id="edge3" type="radio" name="edge"> Transparent
+Rigid<input id="edge1" type="radio" name="edge" checked> <br>
+Loose<input id="edge2" type="radio" name="edge"> <br>
+Transparent<input id="edge3" type="radio" name="edge"> <br><br>
 </div>
+</td>
+</tr><tr>
+<td>
+<table id="controls"><tr>
+<td class="mainbutton" onclick="paused=false;draw()">&#9658;<br>Play</td>
+<td class="mainbutton" onclick="pause();"><b>&#10073;&#10073;</b><br>Pause</td>
+<td class="mainbutton" onclick="pause();reset();draw()">&#x27f2;<br>Reset</td><br>
+</tr></table>
+</td>
+<td class="right">
+Change mass of a portion:<br>
+<input type="text" id="mass1" value="0"> to <input type="text" id="mass2" value="600"><br>
+has mass <input type="text" id="mass3" value="1"><br>
+<button  onclick="massclick()">Update</button>
+</td>
+</tr>
+</table>
 </body>
 </html>
