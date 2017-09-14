@@ -1,0 +1,204 @@
+<!doctype HTML>
+<html>
+<head>
+<title>Wave Simulation</title>
+<script type="text/javascript">
+var y=[];
+var ynew=[];
+var v=[];
+var a=[];
+var m=[];
+
+var paused=true;
+var rightedge;
+var mode=0;
+var wavelength,amplitude;
+
+var animate;
+var fps=40;
+
+var numseg;
+var can;
+var ctx;
+var t=0;
+
+function init(){
+	can=document.getElementById("can0");
+	ctx=can.getContext("2d");
+	updatemodes();
+	updateedge();
+	reset();
+	draw();
+}
+function reset(){
+t=0;
+numseg=parseInt(document.getElementById("input0").value);
+for(var i=0;i<numseg;i++){
+y[i]=0;
+v[i]=0;
+m[i]=1;
+ynew[i]=0;
+}
+
+}
+
+function update(i){
+if(isNaN(y[i+1])){
+	
+	if(rightedge===0){//fixed
+		a[i]=0;
+		v[i]=0;
+	}else if(rightedge===1){//loose
+		a[i]=(y[i-1]-y[i])/(m[i]);
+	}else{//transparent
+		a[i]=(y[i-1]-y[i])/(m[i]);
+		v[i]=0
+	}
+}else{
+	a[i]=(y[i-1]+y[i+1]-2*y[i])/(m[i]);
+}
+v[i]+=a[i];
+ynew[i]+=v[i];
+}
+
+function updateall(){
+	for(var i=1;i<numseg;i++){
+	update(i);
+	}	
+	for(var i=1;i<numseg;i++){
+	y[i]=ynew[i];
+	}
+	}
+function pulse(){
+t=0;
+}
+function draw(){
+	if(mode===0){
+		if(t<50){
+			y[0]=amplitude*Math.exp(-(t/10-2)*(t/10-2))
+			t++;
+		}else{
+			y[0]=0;
+		}
+	}else{
+	y[0]=amplitude*Math.sin((2*Math.PI)*t/wavelength);
+	t++;
+	}
+		ctx.clearRect(0,0,600,200);
+		updateall();
+		ctx.beginPath();
+		for(var i=0;i<numseg;i++){
+			ctx.lineTo(i,100-y[i]);
+		}
+	ctx.stroke();
+	ctx.closePath();
+}
+function updateedge(){
+if(document.getElementById("edge1").checked){
+rightedge=0;
+}else if(document.getElementById("edge2").checked){
+rightedge=1;
+}else{
+rightedge=2;
+}
+}
+function updatemodes(){
+wavelength=parseFloat(document.getElementById("input2").value);
+
+t=0;
+if(document.getElementById("mode1").checked){
+mode=0;//gauss
+amplitude=parseFloat(document.getElementById("input1").value);
+document.getElementById("option1").style.visibility="visible";
+document.getElementById("option2").style.visibility="hidden";
+}else{
+mode=1;//sine
+amplitude=parseFloat(document.getElementById("input3").value);
+document.getElementById("option2").style.visibility="visible";
+document.getElementById("option1").style.visibility="hidden";
+}
+}
+</script>
+<style>
+body{
+color:#fff;
+font-family:helvetica,sans-serif;
+}
+#can0{
+position:absolute;
+background-color:#eee;
+}
+.mainbutton{
+border:1px solid #5ee;
+border-radius:3px;
+background-color:#aaf;
+color:#222;
+height:50px;
+width:50px;
+text-align:center;
+}
+.mainbutton:active{
+background-color:#99f;
+}
+table{
+position:relative;
+
+bottom:1em;
+}
+#left{
+width:300px;
+height:300px;
+}
+#right{
+position:relative;
+width:300px;
+left:300px;
+bottom:300px;
+text-align:right;
+}
+#can1{
+position:relative;
+z-index:1;
+}
+#option1,#option2{
+position:relative;
+left:1em;
+color:#bbb;
+}
+#input0,#input1,#input2,#input3{
+width:5em;
+}
+</style>
+</head>
+<body bgcolor="#205" onload="init()">
+String Length:<input type="number" id="input0" value="400"><br>
+<canvas height="200" width="600" id="can0"></canvas>
+<canvas height="200" width="600" id="can1"></canvas><br>
+
+<div id="left">
+<div id="modes" onchange="updatemodes()">
+Left driver type:<br>
+<input id="mode1" type="radio" name="mode" checked> Gaussian Pulse<br>
+	<div id="option1">
+	Amplitude: <input id="input1" value="20"><br>
+	<button  onclick="t=0">Send another pulse</button><br></div>
+<input id="mode2" type="radio" name="mode"> Sinusoidal<br>
+	<div id="option2">
+	Wavelength: <input id="input2" value="100">
+	Amplitude: <input id="input3" value="20">
+	</div>
+</div>
+<table><tr>
+<td class="mainbutton" onclick="clearInterval(animate);animate=setInterval(draw,(1000/fps))">&#9658;<br>Play</td>
+<td class="mainbutton" onclick="clearInterval(animate)"><b>&#10073;&#10073;</b><br>Pause</td>
+<td class="mainbutton" onclick="clearInterval(animate);reset();draw()">&#x27f2;<br>Reset</td><br>
+</tr></table>
+</div>
+<div id="right" onchange="updateedge()">
+Right edge type:<br>
+<input id="edge1" type="radio" name="edge" checked> Solid<br>
+<input id="edge2" type="radio" name="edge"> Loose<br>
+<input id="edge3" type="radio" name="edge"> Transparent
+</div>
+</body>
+</html>
