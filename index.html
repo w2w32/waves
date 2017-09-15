@@ -31,7 +31,9 @@ function reset(){
 t=0;
 y=[];
 v=[];
-m=[];
+if(m.length<numseg){
+m=m.splice(0,numseg-1);
+}
 numseg=parseInt(document.getElementById("input0").value);
 for(var i=0;i<numseg;i++){
 y[i]=0;
@@ -39,6 +41,7 @@ v[i]=0;
 ynew[i]=0;
 }
 updatemass();
+m[numseg]=m[numseg-1];
 }
 function update(i){
 if(isNaN(y[i+1])){
@@ -152,7 +155,6 @@ function setmass(mass,start,end){
 	for(var i=1;i<inter.length;i++){
 		document.getElementById("base").innerHTML+="<span class=\"marker\" style=\"left:"+
 		(inter[i]+inter[i-1])/2+"px\">"+m[inter[i-1]]+"</span>";
-		console.log(inter[i]);
 	}
 	
 }
@@ -162,7 +164,7 @@ var en=parseInt(document.getElementById("mass2").value);
 var ma=parseFloat(document.getElementById("mass3").value);
 if(st<=en&&ma>=1){
 setmass(ma,st,en);
-}
+}else(console.log(1));
 }
 </script>
 <style>
@@ -259,7 +261,7 @@ Transparent<input id="edge3" type="radio" name="edge"> <br><br>
 </tr><tr>
 <td>
 <table id="controls"><tr>
-<td class="mainbutton" onclick="paused=false;draw()">&#9658;<br>Play</td>
+<td class="mainbutton" onclick="paused=false;updatemass();draw()">&#9658;<br>Play</td>
 <td class="mainbutton" onclick="pause();"><b>&#10073;&#10073;</b><br>Pause</td>
 <td class="mainbutton" onclick="pause();reset();draw()">&#x27f2;<br>Reset</td><br>
 </tr></table>
