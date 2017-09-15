@@ -8,20 +8,15 @@ var ynew=[];
 var v=[];
 var a=[];
 var m=[];
-
 var paused=true;
 var rightedge;
 var mode=1;
 var wavelength,amplitude;
-
 var animate;
 var fps=40;
-
 var numseg;
-var can;
-var ctx;
+var can,can1,ctx,ctx1;
 var t=0;
-
 function init(){
 	can=document.getElementById("can0");
 	ctx=can.getContext("2d");
@@ -30,7 +25,6 @@ function init(){
 	updatemodes();
 	updateedge();
 	reset();
-	setmass(1,0,600);
 	draw();
 }
 function reset(){
@@ -44,11 +38,10 @@ y[i]=0;
 v[i]=0;
 ynew[i]=0;
 }
-setmass(1,0,600);
+updatemass();
 }
 function update(i){
 if(isNaN(y[i+1])){
-	
 	if(rightedge===0){//fixed
 		a[i]=0;
 		v[i]=0;
@@ -64,7 +57,6 @@ if(isNaN(y[i+1])){
 v[i]+=a[i];
 ynew[i]+=v[i];
 }
-
 function updateall(){
 	for(var i=1;i<numseg;i++){
 	update(i);
@@ -79,7 +71,7 @@ t=0;
 function draw(){
 	if(mode===1){
 		if(t<50){
-			y[0]=amplitude*Math.exp(-(t/10-2)*(t/10-2))
+			y[0]=amplitude*Math.exp(-(t/12-2)*(t/12-2))
 			t++;
 		}else{
 			y[0]=0;
@@ -114,7 +106,6 @@ rightedge=2;
 }
 function updatemodes(){
 wavelength=parseFloat(document.getElementById("wav2").value);
-
 t=0;
 if(document.getElementById("mode1").checked){
 mode=1;//gauss
@@ -140,16 +131,16 @@ clearTimeout(animate);
 paused=true;
 }
 function setmass(mass,start,end){
+	var inter=[0]
 	ctx1.strokeStyle="rgba(100,100,200,0.5)";
 	ctx1.clearRect(0,0,600,200);
 	for(var i=start;i<numseg&&i<end;i++){
 		m[i]=mass;
 	}
-	document.getElementById("base").innerHTML="<span class=\"marker\">Mass:"+m[0]+"</span>";
+	document.getElementById("base").innerHTML="<span class=\"marker\">Mass:</span>";
 	for(var i=1;i<numseg;i++){
-
 		if(m[i-1]!==m[i]){
-			document.getElementById("base").innerHTML+="<span class=\"marker\" style=\"left:"+(i+20)+"px\">"+m[i]+"</span>";
+			inter.push(i);
 			ctx1.beginPath();
 			ctx1.moveTo(i,0);
 			ctx1.lineTo(i,200);
@@ -157,11 +148,18 @@ function setmass(mass,start,end){
 			ctx.closePath();
 		}
 	}
+	inter.push(numseg-1);
+	for(var i=1;i<inter.length;i++){
+		document.getElementById("base").innerHTML+="<span class=\"marker\" style=\"left:"+
+		(inter[i]+inter[i-1])/2+"px\">"+m[inter[i-1]]+"</span>";
+		console.log(inter[i]);
+	}
+	
 }
-function massclick(){
+function updatemass(){
 var st=parseInt(document.getElementById("mass1").value);
 var en=parseInt(document.getElementById("mass2").value);
-var ma=parseInt(document.getElementById("mass3").value);
+var ma=parseFloat(document.getElementById("mass3").value);
 if(st<=en&&ma>=1){
 setmass(ma,st,en);
 }
@@ -192,12 +190,12 @@ background-color:#99f;
 #controls{
 position:relative;
 bottom:1em;
+left:1.5em;
 }
 td{
-background-color:#216;
+background-color:#222;
 padding:10px;
 vertical-align:top;
-height:200px;
 border-radius:8px;
 }
 #can1{
@@ -214,7 +212,7 @@ width:5em;
 }
 .marker{
 position:absolute;
-font-size:10px;
+font-size:12px;
 }
 #maintable{
 width:600px;
@@ -225,7 +223,7 @@ position:relative;
 }
 </style>
 </head>
-<body bgcolor="#0a0033" onload="init()">
+<body bgcolor="#333" onload="init()">
 String Length:<input type="text" id="input0" value="400"><br>
 <canvas height="200" width="600" id="can0"></canvas>
 <canvas height="200" width="600" id="can1"></canvas><br>
@@ -235,7 +233,7 @@ String Length:<input type="text" id="input0" value="400"><br>
 <table id="maintable"><tr>
 <td id="left">
 <div id="modes" onchange="updatemodes()">
-Left driver:<br>
+<b>Left driver:</b><br>
 <input id="mode1" type="radio" name="mode" checked>Gaussian Pulse<br>
 	<div id="option1">
 	Amplitude: <input type="text" id="amp1" value="20"><br>
@@ -252,7 +250,7 @@ Left driver:<br>
 </td>
 <td onchange="updateedge()" class="right">
 <div>
-Right edge:<br>
+<b>Right edge:</b><br>
 Rigid<input id="edge1" type="radio" name="edge" checked> <br>
 Loose<input id="edge2" type="radio" name="edge"> <br>
 Transparent<input id="edge3" type="radio" name="edge"> <br><br>
@@ -268,9 +266,9 @@ Transparent<input id="edge3" type="radio" name="edge"> <br><br>
 </td>
 <td class="right">
 Change mass of a portion:<br>
-<input type="text" id="mass1" value="0"> to <input type="text" id="mass2" value="600"><br>
+x = <input type="text" id="mass1" value="0"> to <input type="text" id="mass2" value="600"><br>
 has mass <input type="text" id="mass3" value="1"><br>
-<button  onclick="massclick()">Update</button>
+<button  onclick="updatemass()">Update</button><br>
 </td>
 </tr>
 </table>
