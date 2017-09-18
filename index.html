@@ -31,20 +31,21 @@ function reset(){
 t=0;
 y=[];
 v=[];
-if(m.length<numseg){
-m=m.splice(0,numseg-1);
-}
 numseg=parseInt(document.getElementById("input0").value);
+if(m.length>numseg){
+//m=m.splice(0,numseg);
+}
 for(var i=0;i<numseg;i++){
 y[i]=0;
 v[i]=0;
 ynew[i]=0;
 }
 updatemass();
-m[numseg]=m[numseg-1];
+m[numseg-1]=m[numseg-2];
+//m[numseg]=m[numseg-1];
 }
 function update(i){
-if(isNaN(y[i+1])){
+if(i===numseg-1){
 	if(rightedge===0){//fixed
 		a[i]=0;
 		v[i]=0;
@@ -52,7 +53,7 @@ if(isNaN(y[i+1])){
 		a[i]=(y[i-1]-y[i])/(m[i]);
 	}else{//transparent
 		a[i]=(y[i-1]-y[i])/(m[i]);
-		v[i]=0
+		v[i]=0;
 	}
 }else{
 	a[i]=(y[i-1]+y[i+1]-2*y[i])/((m[i]));
@@ -67,10 +68,8 @@ function updateall(){
 	for(var i=1;i<numseg;i++){
 	y[i]=ynew[i];
 	}
-	}
-function pulse(){
-t=0;
-}
+} 
+
 function draw(){
 	if(mode===1){
 		if(t<50){
@@ -155,8 +154,7 @@ function setmass(mass,start,end){
 	for(var i=1;i<inter.length;i++){
 		document.getElementById("base").innerHTML+="<span class=\"marker\" style=\"left:"+
 		(inter[i]+inter[i-1])/2+"px\">"+m[inter[i-1]]+"</span>";
-	}
-	
+	}	
 }
 function updatemass(){
 var st=parseInt(document.getElementById("mass1").value);
@@ -164,7 +162,7 @@ var en=parseInt(document.getElementById("mass2").value);
 var ma=parseFloat(document.getElementById("mass3").value);
 if(st<=en&&ma>=1){
 setmass(ma,st,en);
-}else(console.log(1));
+}
 }
 </script>
 <style>
